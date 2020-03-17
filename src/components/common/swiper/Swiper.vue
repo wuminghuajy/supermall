@@ -25,6 +25,7 @@
 		    type: Number,
         default: 300
       },
+      //手指滚动比例
       moveRatio: {
         type: Number,
         default: 0.25
