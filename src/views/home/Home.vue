@@ -70,8 +70,10 @@
         },
         currentType: 'pop',
         isShowBackTop:false,
-        tabOffsetTop:0,
         isTabFixed: false,
+        tabOffsetTop:0,
+        saveY:0,
+        itemImgListener:null
       }
     },
     computed:{
@@ -79,7 +81,7 @@
         return this.goods[this.currentType].list
       }
     },
-    created() {
+      created() {
       // 1.请求多个数据
       this.getHomeMultidata()
       //2.请求商品数据
@@ -89,14 +91,26 @@
       
       
     },
-    mounted() {
+      mounted() {
       // 1.图片加载完成的事件监听
       const refresh = debounce(this.$refs.scroll.refresh, 50)
+
       this.$bus.$on('itemImageLoad', () => {
         refresh()
       })
       
       
+    },
+      activated(){
+        this.$refs.scroll.refresh()
+        this.$refs.scroll.scrollTo(0, this.saveY, 0)
+        // console.log(this.saveY);
+    },
+      deactivated(){
+        this.saveY = this.$refs.scroll.getCurrentY()
+        // console.log(this.saveY);
+        this.$bus.$off('itemImgLoad',this.itemImgListener)
+        
     },
     methods:{
       //事件监听相关方法
@@ -153,6 +167,8 @@
         getHomeGoods(type, page).then(res => {
           this.goods[type].list.push(...res.data.list)
           this.goods[type].page += 1
+          // console.log(res);
+          
 
           // 完成上拉加载更多
           this.$refs.scroll.finishPullUp()
