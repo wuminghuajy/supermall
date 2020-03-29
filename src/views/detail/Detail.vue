@@ -10,7 +10,8 @@
       <detail-comment-info :comment-info = 'commentInfo' ref="comment"/>
       <goods-list :goods="recommend" ref="recommend"/>
     </scroll>
-    
+    <detail-bottom-bar @addCart='addCart'/>
+    <back-top @click.native="backTop" v-show="isShowBackTop"/>
     </div>
 </template>
 
@@ -22,11 +23,13 @@ import DetailShopInfo from './ChildComps/DetailShopInfo'
 import DetailGoodsInfo from './ChildComps/DetailGoodsInfo'
 import DetailParamsInfo from './ChildComps/DetailParamsInfo'
 import DetailCommentInfo from './ChildComps/DetailCommentInfo'
+import DetailBottomBar from './ChildComps/DetailBottomBar'
 import {getDetail, Goods,Shop,GoodsParam,getRecommend} from  'network/detail'
 import {debounce} from 'common/utils'
 import Scroll from 'components/common/scroll/Scroll'
 import GoodsList from "components/content/goods/GoodsList"
-
+import BackTop from "components/content/backTop/BackTop"
+// import Vuex 
 export default {
     name:'Detail',
     data() {
@@ -41,7 +44,8 @@ export default {
           recommend:[],
           themeTopYs:[],
           getThemeTopY :null,
-          currentindex:0
+          currentindex:0,
+          isShowBackTop:false,
         };
     },
     components:{
@@ -52,8 +56,10 @@ export default {
       DetailGoodsInfo,
       DetailParamsInfo,
       DetailCommentInfo,
+      DetailBottomBar,
       Scroll,
-      GoodsList
+      GoodsList,
+      BackTop
     },
     created() {
       //1.保存传入的iid
@@ -92,14 +98,13 @@ export default {
         this.themeTopYs.push(this.$refs.params.$el.offsetTop);
         this.themeTopYs.push(this.$refs.comment.$el.offsetTop);
         this.themeTopYs.push(this.$refs.recommend.$el.offsetTop);
-        // this.themeTopYs.push(Number.MAX_VALUE)
-        // console.log(this.themeTopYs);
+        
       })
-        // console.log(this.themeTopYs);
+        
     },
    
     methods: {
-    imgLoad(){
+      imgLoad(){
         this.$refs.scroll.refresh()
         this.getThemeTopY()
       },
@@ -117,11 +122,29 @@ export default {
           if(this.currentindex != i && ((i < length - 1 && positionY >=  this.themeTopYs[i] 
           && positionY < this.themeTopYs[i+1]) || (i === length - 1 && positionY >= this.themeTopYs[i]))){
             this.currentindex = i;
-            console.log(this.currentindex);
-            
+            // console.log(this.currentindex); 
             this.$refs.nav.currentindex = this.currentindex
           }
         };
+        //3.判断返回顶部按钮是否显示
+         this.isShowBackTop = (- position.y) > this.$refs.goodsInfo.$el.offsetTop;
+         
+      },
+      //4.点击回到顶部
+      backTop(){
+        this.$refs.scroll.scrollTo(0,0,300)
+      },
+      addCart(){
+        
+        //1.获取购车需要展示的信息
+        const product = {}
+        product.image = this.topImages[0];
+        product.title = this.goods.title;
+        product.desc = this.goods.desc;
+        product.price = this.goods.realPrice;
+        product.iid = this.iid;
+
+        this.$store.dispatch('addCart',product)
       }
     }
 };
@@ -142,10 +165,11 @@ export default {
   }
 
   .content {
-    height: calc(100% - 44px);
+    height: calc(100% - 93px);
     overflow: hidden;
     position: absolute;
     top:44px;
+    
   }
 
   .goods-info{
